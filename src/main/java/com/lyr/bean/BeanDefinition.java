@@ -1,8 +1,10 @@
 package com.lyr.bean;
 
-/**
- *  保存 Bean 的定义信息，包括 Class 类型、属性、构造方法等
- */
+import io.swagger.v3.oas.annotations.media.Schema;
+import lombok.Data;
+
+@Schema(description = "保存 Bean 的定义信息，包括 Class 类型、属性、构造方法等")
+@Data
 public class BeanDefinition {
 
     private Object bean;

@@ -1,5 +1,6 @@
 package com.lyr.bean;
 
+import cn.hutool.core.util.ObjectUtil;
 import com.lyr.factory.BeanFactory;
 import java.util.HashMap;
 import java.util.Map;
@@ -9,7 +10,7 @@ public class MiniIoc implements BeanFactory {
     private Map<String, BeanDefinition> beanDefinitionMap = new HashMap<>();
 
     @Override
-    public Object getBean(String name) {
+    public Object getBeanByName(String name) {
         // 根据名称获取 BeanDefinition
         BeanDefinition beanDefinition = beanDefinitionMap.get(name);
         if (beanDefinition == null) {
@@ -18,8 +19,7 @@ public class MiniIoc implements BeanFactory {
 
         // 获取 Bean 实例
         Object bean = beanDefinition.getBean();
-        if (bean == null) {
-            // 创建 Bean 实例
+        if (ObjectUtil.isEmpty(bean)) {
             bean = createBean(beanDefinition);
             beanDefinition.setBean(bean);
         }
@@ -27,7 +27,7 @@ public class MiniIoc implements BeanFactory {
     }
 
     @Override
-    public void registerBeanDefinition(String name, BeanDefinition beanDefinition) {
+    public void registerBean(String name, BeanDefinition beanDefinition) {
         Object bean = createBean(beanDefinition);
         beanDefinition.setBean(bean);
         beanDefinitionMap.put(name, beanDefinition);
