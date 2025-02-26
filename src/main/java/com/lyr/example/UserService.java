@@ -3,7 +3,7 @@ package com.lyr.example;
 import com.lyr.annotation.MiniAutowired;
 import com.lyr.annotation.MiniComponent;
 
-@MiniComponent("UserService")
+@MiniComponent // 默认驼峰命名
 public class UserService {
     @MiniAutowired
     private UserRepository userRepository;

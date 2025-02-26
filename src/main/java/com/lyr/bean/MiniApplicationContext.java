@@ -1,9 +1,11 @@
 package com.lyr.bean;
 
+import cn.hutool.core.util.ObjectUtil;
+import com.lyr.annotation.MiniAutowired;
 import com.lyr.annotation.MiniComponent;
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+
 import java.io.File;
 import java.lang.reflect.Field;
 import java.net.URL;
@@ -27,6 +29,10 @@ public class MiniApplicationContext {
             // 扫描指定包下的类
             Set<Class<?>> classes = this.scanPackage(basePackage);
             // 创建bean实例
+            if(ObjectUtil.isEmpty(classes)){
+                log.error("扫描指定包下的类为空");
+                return;
+            }
             this.registerBeans(classes);
             // 注入依赖
             this.injectDependencies();
@@ -45,9 +51,9 @@ public class MiniApplicationContext {
         while (resources.hasMoreElements()) {
             URL resource = resources.nextElement();
             File directory = new File(resource.getFile());
-            scanDirectory(directory, basePackage, classes);
+            // 递归扫描目录下的类文件
+            this.scanDirectory(directory, basePackage, classes);
         }
-
         log.info("set信息："+classes);
         return classes;
     }
@@ -55,16 +61,19 @@ public class MiniApplicationContext {
     // 递归扫描目录下的类文件
     private void scanDirectory(File directory, String basePackage, Set<Class<?>> classes) throws Exception {
         File[] files = directory.listFiles();
-        if (files != null) {
-            for (File file : files) {
-                if (file.isDirectory()) {
-                    scanDirectory(file, basePackage + "." + file.getName(), classes);
-                } else if (file.getName().endsWith(".class")) {
-                    String className = basePackage + "." + file.getName().substring(0, file.getName().length() - 6);
-                    Class<?> clazz = Class.forName(className);
-                    if (clazz.isAnnotationPresent(MiniComponent.class)) {
-                        classes.add(clazz);
-                    }
+        if(ObjectUtil.isEmpty(files)){
+            log.info("directory.listFiles()为空");
+            return;
+        }
+
+        for (File file : files) {
+            if (file.isDirectory()) {
+                scanDirectory(file, basePackage + "." + file.getName(), classes);
+            } else if (file.getName().endsWith(".class")) {
+                String className = basePackage + "." + file.getName().substring(0, file.getName().length() - 6);
+                Class<?> clazz = Class.forName(className);
+                if (clazz.isAnnotationPresent(MiniComponent.class)) {
+                    classes.add(clazz);
                 }
             }
         }
@@ -91,7 +100,7 @@ public class MiniApplicationContext {
             Class<?> beanClass = beanClassMap.get(entry.getKey());
 
             for (Field field : beanClass.getDeclaredFields()) {
-                if (field.isAnnotationPresent(Autowired.class)) {
+                if (field.isAnnotationPresent(MiniAutowired.class)) {
                     field.setAccessible(true);
                     String beanName = toLowerCase(field.getType().getSimpleName());
                     Object dependencyBean = beanMap.get(beanName);
